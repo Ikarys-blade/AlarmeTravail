@@ -1,0 +1,38 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Autoriser l'exécution de gradlew
+        run: chmod +x gradlew
+
+      - name: Générer le wrapper Gradle si absent
+        run: |
+          if [ ! -f "gradlew" ]; then
+            gradle wrapper --gradle-version 8.4
+            chmod +x gradlew
+          fi
+
+      - name: Compiler l'APK debug
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Publier l'APK généré
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlarmeTravail-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
